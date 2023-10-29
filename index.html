@@ -1,95 +1,47 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Svatba Adama a Elišky</title>
+    <title>Adam a Eliška</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f4e7db;
-            margin: 0;
-            padding: 0;
+            font-family: Arial, sans-serif;
         }
-        .container {
-            background-color: #fff;
-            border-radius: 10px;
-            margin: 2% auto;
-            padding: 20px;
-            width: 80%;
-        }
-        h1 {
-            color: #ff7f50;
-        }
-        p {
-            font-size: 18px;
-        }
-        .section {
-            margin-top: 20px;
-        }
-        .countdown {
+        #countdown {
             font-size: 24px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Svatba Adama a Elišky</h1>
-
-        <div class="section">
-            <h2>Pozvání</h2>
-            <p>Rádi bychom Vás pozvali na naši svatbu. Těšíme se na Vaši účast a společné oslavy.</p>
-        </div>
-
-        <div class="section">
-            <h2>Informace</h2>
-            <p>Naše svatba se uskuteční za 5 let.</p>
-            <p>Místo konání: Nádherné místo</p>
-        </div>
-
-        <div class="section">
-            <h2>Dress Code</h2>
-            <p>Požadujeme formální oblečení.</p>
-        </div>
-
-        <div class="section">
-            <h2>Odpověd</h2>
-            <p>Prosíme, potvrďte Vaši účast do 15. září 2028.</p>
-        </div>
-
-        <div class="section">
-            <h2>Kontakt</h2>
-            <p>Pokud máte nějaké dotazy, kontaktujte nás na adresa@email.cz.</p>
-        </div>
-
-        <div class="section">
-            <h2>Odpočítávání</h2>
-            <p class="countdown" id="countdown"></p>
-        </div>
-    </div>
+    <h1>Adam a Eliška</h1>
+    <p>Za</p>
+    <div id="countdown"></div>
 
     <script>
-        // Function to calculate and update the countdown
+        // Nastavíme cílové datum na 18. srpna 2027
+        const targetDate = new Date("2028-08-18T00:00:00");
+
         function updateCountdown() {
-            const weddingDate = new Date('2028-09-15T00:00:00');
-            const now = new Date();
+            const currentDate = new Date();
+            const timeDifference = targetDate - currentDate;
 
-            const timeRemaining = weddingDate - now;
-            const years = timeRemaining / (1000 * 60 * 60 * 24 * 365.25);
-            const months = (years - Math.floor(years)) * 12;
-            const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24)) % 30.44;
-            const hours = Math.floor((timeRemaining / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((timeRemaining / (1000 * 60)) % 60);
-            const seconds = Math.floor((timeRemaining / 1000) % 60);
+            if (timeDifference <= 0) {
+                document.getElementById("countdown").innerHTML = "Odpočet vypršel!";
+            } else {
+                const seconds = Math.floor((timeDifference / 1000) % 60);
+                const minutes = Math.floor((timeDifference / 1000 / 60) % 60);
+                const hours = Math.floor((timeDifference / (1000 * 60 * 60)) % 24);
+                const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+                const months = Math.floor(days / 30);
+                const years = Math.floor(months / 12);
 
-            document.getElementById("countdown").innerHTML = `${Math.floor(years)}y ${Math.floor(months)}m ${days}d ${hours}h ${minutes}m ${seconds}s`;
+                // Nastavíme text na český
+                document.getElementById("countdown").innerHTML = `${years} roky : ${months % 12} měsíců : ${days % 30} dní : ${hours} hodin : ${minutes} minut : ${seconds} sekund`;
+            }
         }
 
-        // Initial call to update the countdown
-        updateCountdown();
-
-        // Update the countdown every second
+        // Zavoláme funkci updateCountdown každou sekundu
         setInterval(updateCountdown, 1000);
     </script>
 </body>

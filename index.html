@@ -6,6 +6,10 @@
         body {
             text-align: center;
             font-family: Arial, sans-serif;
+            background-color: #ffeeee; /* Slight red background color */
+        }
+        h1, p, #countdown {
+            color: #333; /* Text color */
         }
         #countdown {
             font-size: 24px;
@@ -20,7 +24,7 @@
 
     <script>
         // Nastavíme cílové datum na 18. srpna 2027
-        const targetDate = new Date("2028-08-18T00:00:00");
+        const targetDate = new Date("2027-08-18T00:00:00");
 
         function updateCountdown() {
             const currentDate = new Date();
@@ -37,7 +41,7 @@
                 const years = Math.floor(months / 12);
 
                 // Nastavíme text na český
-                document.getElementById("countdown").innerHTML = `${years} roky : ${months % 12} měsíců : ${days % 30} dní : ${hours} hodin : ${minutes} minut : ${seconds} sekund`;
+                document.getElementById("countdown").innerHTML = `${years} let : ${months % 12} měsíců : ${days % 30} dní : ${hours} hodin : ${minutes} minut : ${seconds} sekund`;
             }
         }
 

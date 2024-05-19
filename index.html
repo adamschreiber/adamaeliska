@@ -3,15 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Display Image</title>
+    <title>Position Image</title>
     <style>
-        .custom-image {
-            border: 2px solid #000;
-            border-radius: 1px;
+        .positioned-image {
+            position: absolute;
+            top: 50px; /* Distance from the top of the container */
+            left: 50px; /* Distance from the left of the container */
+        }
+        .relative-container {
+            position: relative;
+            height: 500px; /* Set a height for the container */
         }
     </style>
 </head>
 <body>
-    <img src="Screenshot 2024-05-19 at 13.10.46.png" alt="Description of the image" width="500" height="1000" class="custom-image">
+    <div class="relative-container">
+        <img src="images/your-image.jpg" alt="Description of the image" class="positioned-image">
+        <p>Your content goes here. The image will be positioned absolutely within the container.</p>
+    </div>
 </body>
 </html>

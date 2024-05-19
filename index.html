@@ -1,57 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Adam a Eliška</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Image</title>
     <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-            background-color: #ffeeee; /* Slight red background color */
-            margin: 0;
-        }
-        h1, p, #countdown {
-            color: #333; /* Text color */
-        }
-        #countdown {
-            font-size: 24px;
-            margin-top: 20px;
+        .custom-image {
+            border: 2px solid #000;
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>Adam a Eliška</h1>
-    <p>Za</p>
-    <div id="countdown"></div>
-
-    <script>
-        // Nastavíme cílové datum na 18. srpna 2027
-        const targetDate = new Date("2028-08-18T00:00:00");
-
-        function updateCountdown() {
-            const currentDate = new Date();
-            const timeDifference = targetDate - currentDate;
-
-            if (timeDifference <= 0) {
-                document.getElementById("countdown").innerHTML = "Odpočet vypršel!";
-            } else {
-                const seconds = Math.floor((timeDifference / 1000) % 60);
-                const minutes = Math.floor((timeDifference / 1000 / 60) % 60);
-                const hours = Math.floor((timeDifference / (1000 * 60 * 60)) % 24);
-                const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-                const months = Math.floor(days / 30);
-                const years = Math.floor(months / 12);
-
-                // Nastavíme text na český
-                document.getElementById("countdown").innerHTML = `${years} roky : ${months % 12} měsíců : ${days % 30} dní : ${hours} hodin : ${minutes} minut : ${seconds} sekund`;
-            }
-        }
-
-        // Zavoláme funkci updateCountdown každou sekundu
-        setInterval(updateCountdown, 1000);
-    </script>
+    <img src="path/to/your/image.jpg" alt="Description of the image" width="500" height="300" class="custom-image">
 </body>
 </html>

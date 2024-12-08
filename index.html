@@ -107,7 +107,38 @@
         let totalLength = 0;
         let intervalId = null;
         let isPlaying = false;
-        let currentInterval = 5000; // Default interval set to 5 seconds (5000 milliseconds)
+        let currentInterval = 5000; // Default interval in milliseconds
+
+        // Restore saved state from localStorage
+        function restoreState() {
+            const savedDiameter = localStorage.getItem("diameter");
+            const savedPositions = localStorage.getItem("positions");
+            const savedInterval = localStorage.getItem("interval");
+            const savedStep = localStorage.getItem("currentStep");
+
+            if (savedDiameter) {
+                document.getElementById("diameter").value = savedDiameter;
+            }
+            if (savedPositions) {
+                document.getElementById("positions").value = savedPositions;
+            }
+            if (savedInterval) {
+                document.getElementById("interval").value = savedInterval;
+                currentInterval = parseInt(savedInterval, 10) * 1000;
+                document.getElementById("interval-label").textContent = savedInterval;
+            }
+            if (savedStep) {
+                currentStep = parseInt(savedStep, 10);
+            }
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            localStorage.setItem("diameter", document.getElementById("diameter").value);
+            localStorage.setItem("positions", document.getElementById("positions").value);
+            localStorage.setItem("interval", document.getElementById("interval").value);
+            localStorage.setItem("currentStep", currentStep);
+        }
 
         function shiftLetter(letter) {
             // Shift the segment letter cyclically (A → B → C → D → A)
@@ -163,6 +194,9 @@
             // Clear error message
             errorMessage.textContent = "";
 
+            // Save inputs to localStorage
+            saveState();
+
             // Calculate total string length
             const radius = diameter / 2;
             const numNails = 288;
@@ -188,7 +222,6 @@
 
             positions = inputPositions.map((pos) => generateNailLabel(pos, numNails));
             document.getElementById("total-length").textContent = `Total String Length: ${totalLength.toFixed(2)} meters`;
-            currentStep = 0;
             showCurrentStep();
         }
 
@@ -197,6 +230,7 @@
                 currentStep += direction;
                 if (currentStep < 0) currentStep = 0;
                 if (currentStep >= positions.length) currentStep = positions.length - 1;
+                saveState(); // Save current step
                 showCurrentStep();
             }
         }
@@ -230,6 +264,8 @@
                 stopAutoPlay();
                 startAutoPlay();
             }
+
+            saveState(); // Save updated interval
         }
 
         function togglePlayPause() {
@@ -258,6 +294,7 @@
                 } else {
                     currentStep++;
                 }
+                saveState(); // Save current step
                 showCurrentStep();
             }, currentInterval);
         }
@@ -266,6 +303,9 @@
             clearInterval(intervalId);
             intervalId = null;
         }
+
+        // Restore state on page load
+        window.onload = restoreState;
     </script>
 </body>
 </html>

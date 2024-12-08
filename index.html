@@ -17,7 +17,7 @@
             border: 1px solid #ccc;
             border-radius: 10px;
         }
-        input[type="range"] {
+        input[type="range"], input[type="number"] {
             width: 100%;
         }
         input, textarea {
@@ -32,17 +32,9 @@
             cursor: pointer;
             margin: 10px;
         }
-        .arrow {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            display: inline-block;
-            margin: 10px;
-            transition: opacity 0.3s;
-        }
-        .arrow.inactive {
+        button:disabled {
             opacity: 0.3;
-            pointer-events: none;
+            cursor: not-allowed;
         }
         .step-details {
             margin-top: 20px;
@@ -63,6 +55,14 @@
             font-size: 18px;
             color: gray;
             margin-bottom: 20px;
+        }
+        .jump-to-container {
+            margin-top: 20px;
+        }
+        .jump-to-container input:disabled,
+        .jump-to-container button:disabled {
+            opacity: 0.3;
+            pointer-events: none;
         }
         .error-message {
             color: red;
@@ -86,16 +86,22 @@
         <button onclick="startStepDisplay()">Start Step-by-Step</button>
         
         <div class="total-length" id="total-length">Total String Length: -- meters</div>
-        <div class="step-count" id="step-count">Step: -- of --</div>
+        <div class="step-count" id="step-count">Step: <span id="step-number-text">--</span></div>
         <div class="step-details" id="step-details">--</div>
+
+        <div class="jump-to-container">
+            <label for="jump-to-step">Jump to:</label>
+            <input type="number" id="jump-to-step" placeholder="Step number" min="1" step="1">
+            <button onclick="jumpToStep()">Go</button>
+        </div>
 
         <label for="interval">Set Step Interval (seconds):</label>
         <input type="range" id="interval" min="1" max="10" step="1" value="5" oninput="updateInterval()">
         <div>Interval: <span id="interval-label">5</span> seconds</div>
 
         <div class="arrows-container" id="arrows-container">
-            <span class="arrow" id="prev-arrow" onclick="showStep(-1)">⬅ Previous</span>
-            <span class="arrow" id="next-arrow" onclick="showStep(1)">Next ➡</span>
+            <button id="prev-arrow" onclick="showStep(-1)">⬅ Previous</button>
+            <button id="next-arrow" onclick="showStep(1)">Next ➡</button>
         </div>
 
         <button id="play-pause-btn" onclick="togglePlayPause()">Play</button>
@@ -109,47 +115,13 @@
         let isPlaying = false;
         let currentInterval = 5000; // Default interval in milliseconds
 
-        // Restore saved state from localStorage
-        function restoreState() {
-            const savedDiameter = localStorage.getItem("diameter");
-            const savedPositions = localStorage.getItem("positions");
-            const savedInterval = localStorage.getItem("interval");
-            const savedStep = localStorage.getItem("currentStep");
-
-            if (savedDiameter) {
-                document.getElementById("diameter").value = savedDiameter;
-            }
-            if (savedPositions) {
-                document.getElementById("positions").value = savedPositions;
-            }
-            if (savedInterval) {
-                document.getElementById("interval").value = savedInterval;
-                currentInterval = parseInt(savedInterval, 10) * 1000;
-                document.getElementById("interval-label").textContent = savedInterval;
-            }
-            if (savedStep) {
-                currentStep = parseInt(savedStep, 10);
-            }
-        }
-
-        // Save state to localStorage
-        function saveState() {
-            localStorage.setItem("diameter", document.getElementById("diameter").value);
-            localStorage.setItem("positions", document.getElementById("positions").value);
-            localStorage.setItem("interval", document.getElementById("interval").value);
-            localStorage.setItem("currentStep", currentStep);
-        }
-
         function shiftLetter(letter) {
-            // Shift the segment letter cyclically (A → B → C → D → A)
             return String.fromCharCode(((letter.charCodeAt(0) - 65 + 1) % 4) + 65);
         }
 
         function generateNailLabel(index, numNails) {
             const segmentSize = numNails / 4; // Nails per segment
-            let localIndex;
-            let baseLabel;
-
+            let localIndex, baseLabel;
             if (index < segmentSize) {
                 localIndex = index;
                 baseLabel = 'A';
@@ -163,9 +135,7 @@
                 localIndex = index - 3 * segmentSize;
                 baseLabel = 'D';
             }
-
-            const shiftedLabel = shiftLetter(baseLabel);
-            return `${shiftedLabel}${localIndex}`;
+            return `${shiftLetter(baseLabel)}${localIndex}`;
         }
 
         function startStepDisplay() {
@@ -173,31 +143,21 @@
             const inputPositions = document.getElementById("positions").value.split(",").map(Number);
             const errorMessage = document.getElementById("error-message");
 
-            // Validate inputs
             if (isNaN(diameter) || diameter <= 0) {
                 errorMessage.textContent = "Please enter a valid diameter greater than 0.";
                 return;
             }
-
             if (inputPositions.some(isNaN)) {
                 errorMessage.textContent = "Please enter valid numeric positions.";
                 return;
             }
-
-            // Validate position range
             const invalidPositions = inputPositions.filter(pos => pos < 0 || pos >= 288);
             if (invalidPositions.length > 0) {
                 errorMessage.textContent = `Invalid positions detected: ${invalidPositions.join(", ")}. Positions must be between 0 and 287.`;
                 return;
             }
-
-            // Clear error message
             errorMessage.textContent = "";
 
-            // Save inputs to localStorage
-            saveState();
-
-            // Calculate total string length
             const radius = diameter / 2;
             const numNails = 288;
             const angleStep = (2 * Math.PI) / numNails;
@@ -205,19 +165,19 @@
             const coordinates = [];
             for (let i = 0; i < numNails; i++) {
                 const angle = angleStep * i;
-                const x = radius * Math.cos(angle);
-                const y = radius * Math.sin(angle);
-                coordinates.push({ x, y });
+                coordinates.push({
+                    x: radius * Math.cos(angle),
+                    y: radius * Math.sin(angle)
+                });
             }
 
             totalLength = 0;
             for (let i = 0; i < inputPositions.length - 1; i++) {
                 const p1 = coordinates[inputPositions[i]];
                 const p2 = coordinates[inputPositions[i + 1]];
-                const distance = Math.sqrt(
+                totalLength += Math.sqrt(
                     Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
                 );
-                totalLength += distance;
             }
 
             positions = inputPositions.map((pos) => generateNailLabel(pos, numNails));
@@ -226,86 +186,100 @@
         }
 
         function showStep(direction) {
-            if (!isPlaying) {
-                currentStep += direction;
-                if (currentStep < 0) currentStep = 0;
-                if (currentStep >= positions.length) currentStep = positions.length - 1;
-                saveState(); // Save current step
-                showCurrentStep();
-            }
+            currentStep += direction;
+            if (currentStep < 0) currentStep = 0;
+            if (currentStep >= positions.length) currentStep = positions.length - 1;
+            showCurrentStep();
         }
 
         function showCurrentStep() {
             if (positions.length === 0) {
                 document.getElementById("step-details").textContent = "--";
-                document.getElementById("step-count").textContent = "Step: -- of --";
+                document.getElementById("step-number-text").textContent = "--";
+                updateControls();
                 return;
             }
             const nail = positions[currentStep];
             document.getElementById("step-details").textContent = nail;
-            document.getElementById("step-count").textContent = `Step: ${currentStep + 1} of ${positions.length}`;
+            document.getElementById("step-number-text").textContent = currentStep + 1;
             speakText(nail);
+            updateControls();
         }
 
         function speakText(text) {
-            const speech = new SpeechSynthesisUtterance(text);
-            speech.lang = 'en-US';
-            speech.pitch = 1;
-            speech.rate = 1;
-            window.speechSynthesis.speak(speech);
+            if ('speechSynthesis' in window) {
+                const speech = new SpeechSynthesisUtterance(text);
+                speech.lang = 'en-US';
+                speech.pitch = 1;
+                speech.rate = 1;
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(speech);
+            }
         }
 
-        function updateInterval() {
-            const intervalValue = document.getElementById("interval").value;
-            document.getElementById("interval-label").textContent = intervalValue;
-            currentInterval = parseInt(intervalValue, 10) * 1000;
-
-            if (isPlaying) {
-                stopAutoPlay();
-                startAutoPlay();
+        function jumpToStep() {
+            const stepIndex = parseInt(document.getElementById("jump-to-step").value, 10) - 1;
+            if (stepIndex >= 0 && stepIndex < positions.length) {
+                currentStep = stepIndex;
+                showCurrentStep();
+            } else {
+                alert("Invalid step number. Please enter a number within the valid range.");
             }
-
-            saveState(); // Save updated interval
+            document.getElementById("jump-to-step").value = "";
         }
 
         function togglePlayPause() {
             isPlaying = !isPlaying;
             const playPauseBtn = document.getElementById("play-pause-btn");
-            const prevArrow = document.getElementById("prev-arrow");
-            const nextArrow = document.getElementById("next-arrow");
+            playPauseBtn.textContent = isPlaying ? "Pause" : "Play";
 
             if (isPlaying) {
-                playPauseBtn.textContent = "Pause";
-                prevArrow.classList.add("inactive");
-                nextArrow.classList.add("inactive");
                 startAutoPlay();
             } else {
-                playPauseBtn.textContent = "Play";
-                prevArrow.classList.remove("inactive");
-                nextArrow.classList.remove("inactive");
                 stopAutoPlay();
             }
+            updateControls();
         }
 
         function startAutoPlay() {
             intervalId = setInterval(() => {
                 if (currentStep >= positions.length - 1) {
-                    currentStep = 0; // Loop back to the beginning
+                    currentStep = 0;
                 } else {
                     currentStep++;
                 }
-                saveState(); // Save current step
                 showCurrentStep();
             }, currentInterval);
         }
 
         function stopAutoPlay() {
             clearInterval(intervalId);
-            intervalId = null;
         }
 
-        // Restore state on page load
-        window.onload = restoreState;
+        function updateInterval() {
+            currentInterval = parseInt(document.getElementById("interval").value, 10) * 1000;
+            document.getElementById("interval-label").textContent = currentInterval / 1000;
+            if (isPlaying) {
+                stopAutoPlay();
+                startAutoPlay();
+            }
+        }
+
+        function updateControls() {
+            const prevArrow = document.getElementById("prev-arrow");
+            const nextArrow = document.getElementById("next-arrow");
+            const jumpToInput = document.getElementById("jump-to-step");
+            const jumpToButton = document.querySelector(".jump-to-container button");
+
+            prevArrow.disabled = currentStep === 0 || isPlaying;
+            nextArrow.disabled = currentStep === positions.length - 1 || isPlaying;
+            jumpToInput.disabled = isPlaying;
+            jumpToButton.disabled = isPlaying;
+        }
+
+        window.onload = () => {
+            updateControls();
+        };
     </script>
 </body>
 </html>

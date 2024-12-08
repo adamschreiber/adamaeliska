@@ -37,6 +37,16 @@
             font-size: 48px;
             font-weight: bold;
         }
+        .step-count {
+            margin-top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .total-length {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
         .arrows-container {
             margin-top: 20px;
         }
@@ -53,6 +63,8 @@
         
         <button onclick="startStepDisplay()">Start Step-by-Step</button>
         
+        <div class="total-length" id="total-length">Total String Length: -- meters</div>
+        <div class="step-count" id="step-count">Step: -- of --</div>
         <div class="step-details" id="step-details">Nail: --</div>
         
         <div class="arrows-container">
@@ -64,6 +76,35 @@
     <script>
         let currentStep = 0;
         let positions = [];
+        let totalLength = 0;
+
+        function shiftLetter(letter) {
+            // Shift the segment letter cyclically (A → B → C → D → A)
+            return String.fromCharCode(((letter.charCodeAt(0) - 65 + 1) % 4) + 65);
+        }
+
+        function generateNailLabel(index, numNails) {
+            const segmentSize = numNails / 4; // Nails per segment
+            let localIndex;
+            let baseLabel;
+
+            if (index < segmentSize) {
+                localIndex = index;
+                baseLabel = 'A';
+            } else if (index < 2 * segmentSize) {
+                localIndex = index - segmentSize;
+                baseLabel = 'B';
+            } else if (index < 3 * segmentSize) {
+                localIndex = index - 2 * segmentSize;
+                baseLabel = 'C';
+            } else {
+                localIndex = index - 3 * segmentSize;
+                baseLabel = 'D';
+            }
+
+            const shiftedLabel = shiftLetter(baseLabel);
+            return `${shiftedLabel}${localIndex}`;
+        }
 
         function startStepDisplay() {
             const diameter = parseFloat(document.getElementById("diameter").value);
@@ -74,7 +115,31 @@
                 return;
             }
 
-            positions = inputPositions;
+            // Calculate total string length
+            const radius = diameter / 2;
+            const numNails = 288;
+            const angleStep = (2 * Math.PI) / numNails;
+
+            const coordinates = [];
+            for (let i = 0; i < numNails; i++) {
+                const angle = angleStep * i;
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
+                coordinates.push({ x, y });
+            }
+
+            totalLength = 0;
+            for (let i = 0; i < inputPositions.length - 1; i++) {
+                const p1 = coordinates[inputPositions[i]];
+                const p2 = coordinates[inputPositions[i + 1]];
+                const distance = Math.sqrt(
+                    Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
+                );
+                totalLength += distance;
+            }
+
+            positions = inputPositions.map((pos) => generateNailLabel(pos, numNails));
+            document.getElementById("total-length").textContent = `Total String Length: ${totalLength.toFixed(2)} meters`;
             currentStep = 0;
             showCurrentStep();
         }
@@ -89,10 +154,21 @@
         function showCurrentStep() {
             if (positions.length === 0) {
                 document.getElementById("step-details").textContent = "No nails to display.";
+                document.getElementById("step-count").textContent = "Step: -- of --";
                 return;
             }
             const nail = positions[currentStep];
             document.getElementById("step-details").textContent = `Nail: ${nail}`;
+            document.getElementById("step-count").textContent = `Step: ${currentStep + 1} of ${positions.length}`;
+            speakText(`Nail ${nail}`);
+        }
+
+        function speakText(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = 'en-US';
+            speech.pitch = 1;
+            speech.rate = 1;
+            window.speechSynthesis.speak(speech);
         }
     </script>
 </body>

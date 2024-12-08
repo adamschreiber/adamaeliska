@@ -17,20 +17,32 @@
             border: 1px solid #ccc;
             border-radius: 10px;
         }
+        input[type="range"] {
+            width: 100%;
+        }
         input, textarea {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             font-size: 16px;
         }
-        button, .arrow {
+        button {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            margin: 10px;
         }
         .arrow {
-            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
             display: inline-block;
+            margin: 10px;
+            transition: opacity 0.3s;
+        }
+        .arrow.inactive {
+            opacity: 0.3;
+            pointer-events: none;
         }
         .step-details {
             margin-top: 20px;
@@ -47,36 +59,55 @@
             font-size: 20px;
             font-weight: bold;
         }
-        .arrows-container {
-            margin-top: 20px;
+        .subtitle {
+            font-size: 18px;
+            color: gray;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>String Art Step-by-Step</h2>
+        <div class="subtitle">288 nails</div>
+
         <label for="diameter">Enter Circle Diameter (in meters):</label>
         <input type="number" id="diameter" placeholder="Diameter (m)" step="0.01" required>
         
         <label for="positions">Enter Sequence of Positions (comma-separated):</label>
         <textarea id="positions" placeholder="E.g., 0,10,20,30,..."></textarea>
-        
+
+        <div class="error-message" id="error-message"></div>
+
         <button onclick="startStepDisplay()">Start Step-by-Step</button>
         
         <div class="total-length" id="total-length">Total String Length: -- meters</div>
         <div class="step-count" id="step-count">Step: -- of --</div>
-        <div class="step-details" id="step-details">Nail: --</div>
-        
-        <div class="arrows-container">
-            <span class="arrow" onclick="showStep(-1)">⬅ Previous</span>
-            <span class="arrow" onclick="showStep(1)">Next ➡</span>
+        <div class="step-details" id="step-details">--</div>
+
+        <label for="interval">Set Step Interval (seconds):</label>
+        <input type="range" id="interval" min="1" max="10" step="1" value="1" oninput="updateInterval()">
+        <div>Interval: <span id="interval-label">1</span> seconds</div>
+
+        <div class="arrows-container" id="arrows-container">
+            <span class="arrow" id="prev-arrow" onclick="showStep(-1)">⬅ Previous</span>
+            <span class="arrow" id="next-arrow" onclick="showStep(1)">Next ➡</span>
         </div>
+
+        <button id="play-pause-btn" onclick="togglePlayPause()">Play</button>
     </div>
 
     <script>
         let currentStep = 0;
         let positions = [];
         let totalLength = 0;
+        let intervalId = null;
+        let isPlaying = false;
+        let currentInterval = 1000; // Default interval in milliseconds
 
         function shiftLetter(letter) {
             // Shift the segment letter cyclically (A → B → C → D → A)
@@ -109,11 +140,28 @@
         function startStepDisplay() {
             const diameter = parseFloat(document.getElementById("diameter").value);
             const inputPositions = document.getElementById("positions").value.split(",").map(Number);
+            const errorMessage = document.getElementById("error-message");
 
-            if (isNaN(diameter) || inputPositions.some(isNaN)) {
-                document.getElementById("step-details").textContent = "Please enter valid inputs.";
+            // Validate inputs
+            if (isNaN(diameter) || diameter <= 0) {
+                errorMessage.textContent = "Please enter a valid diameter greater than 0.";
                 return;
             }
+
+            if (inputPositions.some(isNaN)) {
+                errorMessage.textContent = "Please enter valid numeric positions.";
+                return;
+            }
+
+            // Validate position range
+            const invalidPositions = inputPositions.filter(pos => pos < 0 || pos >= 288);
+            if (invalidPositions.length > 0) {
+                errorMessage.textContent = `Invalid positions detected: ${invalidPositions.join(", ")}. Positions must be between 0 and 287.`;
+                return;
+            }
+
+            // Clear error message
+            errorMessage.textContent = "";
 
             // Calculate total string length
             const radius = diameter / 2;
@@ -145,22 +193,24 @@
         }
 
         function showStep(direction) {
-            currentStep += direction;
-            if (currentStep < 0) currentStep = 0;
-            if (currentStep >= positions.length) currentStep = positions.length - 1;
-            showCurrentStep();
+            if (!isPlaying) {
+                currentStep += direction;
+                if (currentStep < 0) currentStep = 0;
+                if (currentStep >= positions.length) currentStep = positions.length - 1;
+                showCurrentStep();
+            }
         }
 
         function showCurrentStep() {
             if (positions.length === 0) {
-                document.getElementById("step-details").textContent = "No nails to display.";
+                document.getElementById("step-details").textContent = "--";
                 document.getElementById("step-count").textContent = "Step: -- of --";
                 return;
             }
             const nail = positions[currentStep];
-            document.getElementById("step-details").textContent = `Nail: ${nail}`;
+            document.getElementById("step-details").textContent = nail;
             document.getElementById("step-count").textContent = `Step: ${currentStep + 1} of ${positions.length}`;
-            speakText(`Nail ${nail}`);
+            speakText(nail);
         }
 
         function speakText(text) {
@@ -169,6 +219,52 @@
             speech.pitch = 1;
             speech.rate = 1;
             window.speechSynthesis.speak(speech);
+        }
+
+        function updateInterval() {
+            const intervalValue = document.getElementById("interval").value;
+            document.getElementById("interval-label").textContent = intervalValue;
+            currentInterval = parseInt(intervalValue, 10) * 1000;
+
+            if (isPlaying) {
+                stopAutoPlay();
+                startAutoPlay();
+            }
+        }
+
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            const playPauseBtn = document.getElementById("play-pause-btn");
+            const prevArrow = document.getElementById("prev-arrow");
+            const nextArrow = document.getElementById("next-arrow");
+
+            if (isPlaying) {
+                playPauseBtn.textContent = "Pause";
+                prevArrow.classList.add("inactive");
+                nextArrow.classList.add("inactive");
+                startAutoPlay();
+            } else {
+                playPauseBtn.textContent = "Play";
+                prevArrow.classList.remove("inactive");
+                nextArrow.classList.remove("inactive");
+                stopAutoPlay();
+            }
+        }
+
+        function startAutoPlay() {
+            intervalId = setInterval(() => {
+                if (currentStep >= positions.length - 1) {
+                    currentStep = 0; // Loop back to the beginning
+                } else {
+                    currentStep++;
+                }
+                showCurrentStep();
+            }, currentInterval);
+        }
+
+        function stopAutoPlay() {
+            clearInterval(intervalId);
+            intervalId = null;
         }
     </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>String Art Calculator</title>
+    <title>String Art Length Calculator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -38,8 +38,8 @@
 <body>
     <div class="container">
         <h2>String Art Length Calculator</h2>
-        <label for="diameter">Enter Circle Diameter (in units):</label>
-        <input type="number" id="diameter" placeholder="Diameter" step="0.1" required>
+        <label for="diameter">Enter Circle Diameter (in meters):</label>
+        <input type="number" id="diameter" placeholder="Diameter (m)" step="0.01" required>
         
         <label for="positions">Enter Sequence of Positions (comma-separated):</label>
         <textarea id="positions" placeholder="E.g., 0,10,20,30,..."></textarea>
@@ -82,7 +82,7 @@
                 totalLength += distance;
             }
 
-            document.getElementById("result").textContent = `Total String Length: ${totalLength.toFixed(2)} units`;
+            document.getElementById("result").textContent = `Total String Length: ${totalLength.toFixed(2)} meters`;
         }
     </script>
 </body>

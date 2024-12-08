@@ -90,8 +90,8 @@
         <div class="step-details" id="step-details">--</div>
 
         <label for="interval">Set Step Interval (seconds):</label>
-        <input type="range" id="interval" min="1" max="10" step="1" value="1" oninput="updateInterval()">
-        <div>Interval: <span id="interval-label">1</span> seconds</div>
+        <input type="range" id="interval" min="1" max="10" step="1" value="5" oninput="updateInterval()">
+        <div>Interval: <span id="interval-label">5</span> seconds</div>
 
         <div class="arrows-container" id="arrows-container">
             <span class="arrow" id="prev-arrow" onclick="showStep(-1)">⬅ Previous</span>
@@ -107,7 +107,7 @@
         let totalLength = 0;
         let intervalId = null;
         let isPlaying = false;
-        let currentInterval = 1000; // Default interval in milliseconds
+        let currentInterval = 5000; // Default interval set to 5 seconds (5000 milliseconds)
 
         function shiftLetter(letter) {
             // Shift the segment letter cyclically (A → B → C → D → A)

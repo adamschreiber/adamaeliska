@@ -32,9 +32,9 @@
             margin: 0 10px;
             display: inline-block;
         }
-        .result, .step-details {
+        .step-details {
             margin-top: 20px;
-            font-size: 18px;
+            font-size: 48px;
             font-weight: bold;
         }
         .arrows-container {
@@ -51,10 +51,9 @@
         <label for="positions">Enter Sequence of Positions (comma-separated):</label>
         <textarea id="positions" placeholder="E.g., 0,10,20,30,..."></textarea>
         
-        <button onclick="calculateStringLength()">Calculate & Show Steps</button>
+        <button onclick="startStepDisplay()">Start Step-by-Step</button>
         
-        <div class="result" id="result"></div>
-        <div class="step-details" id="step-details"></div>
+        <div class="step-details" id="step-details">Nail: --</div>
         
         <div class="arrows-container">
             <span class="arrow" onclick="showStep(-1)">⬅ Previous</span>
@@ -64,47 +63,18 @@
 
     <script>
         let currentStep = 0;
-        let steps = [];
+        let positions = [];
 
-        function calculateStringLength() {
+        function startStepDisplay() {
             const diameter = parseFloat(document.getElementById("diameter").value);
-            const positions = document.getElementById("positions").value.split(",").map(Number);
+            const inputPositions = document.getElementById("positions").value.split(",").map(Number);
 
-            if (isNaN(diameter) || positions.some(isNaN)) {
-                document.getElementById("result").textContent = "Please enter valid inputs.";
+            if (isNaN(diameter) || inputPositions.some(isNaN)) {
+                document.getElementById("step-details").textContent = "Please enter valid inputs.";
                 return;
             }
 
-            const radius = diameter / 2;
-            const numNails = 288; // Total nails around the circle
-            const coordinates = [];
-
-            // Calculate coordinates for each nail
-            for (let i = 0; i < numNails; i++) {
-                const angle = (2 * Math.PI * i) / numNails;
-                const x = radius * Math.cos(angle);
-                const y = radius * Math.sin(angle);
-                coordinates.push({ x, y });
-            }
-
-            // Calculate total string length and steps
-            let totalLength = 0;
-            steps = [];
-            for (let i = 0; i < positions.length - 1; i++) {
-                const p1 = coordinates[positions[i] % numNails];
-                const p2 = coordinates[positions[i + 1] % numNails];
-                const distance = Math.sqrt(
-                    Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
-                );
-                totalLength += distance;
-                steps.push({
-                    from: positions[i],
-                    to: positions[i + 1],
-                    distance: distance
-                });
-            }
-
-            document.getElementById("result").textContent = `Total String Length: ${totalLength.toFixed(2)} meters`;
+            positions = inputPositions;
             currentStep = 0;
             showCurrentStep();
         }
@@ -112,17 +82,17 @@
         function showStep(direction) {
             currentStep += direction;
             if (currentStep < 0) currentStep = 0;
-            if (currentStep >= steps.length) currentStep = steps.length - 1;
+            if (currentStep >= positions.length) currentStep = positions.length - 1;
             showCurrentStep();
         }
 
         function showCurrentStep() {
-            if (steps.length === 0) {
-                document.getElementById("step-details").textContent = "No steps to display.";
+            if (positions.length === 0) {
+                document.getElementById("step-details").textContent = "No nails to display.";
                 return;
             }
-            const step = steps[currentStep];
-            document.getElementById("step-details").textContent = `Step ${currentStep + 1}: From Nail ${step.from} to Nail ${step.to}, Distance: ${step.distance.toFixed(2)} meters`;
+            const nail = positions[currentStep];
+            document.getElementById("step-details").textContent = `Nail: ${nail}`;
         }
     </script>
 </body>

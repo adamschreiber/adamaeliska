@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>String Art Length Calculator</title>
+    <title>String Art Step-by-Step</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,7 +11,7 @@
             text-align: center;
         }
         .container {
-            max-width: 500px;
+            max-width: 600px;
             margin: auto;
             padding: 20px;
             border: 1px solid #ccc;
@@ -23,33 +23,49 @@
             margin: 10px 0;
             font-size: 16px;
         }
-        button {
+        button, .arrow {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
         }
-        .result {
+        .arrow {
+            margin: 0 10px;
+            display: inline-block;
+        }
+        .result, .step-details {
             margin-top: 20px;
             font-size: 18px;
             font-weight: bold;
+        }
+        .arrows-container {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>String Art Length Calculator</h2>
+        <h2>String Art Step-by-Step</h2>
         <label for="diameter">Enter Circle Diameter (in meters):</label>
         <input type="number" id="diameter" placeholder="Diameter (m)" step="0.01" required>
         
         <label for="positions">Enter Sequence of Positions (comma-separated):</label>
         <textarea id="positions" placeholder="E.g., 0,10,20,30,..."></textarea>
         
-        <button onclick="calculateStringLength()">Calculate String Length</button>
+        <button onclick="calculateStringLength()">Calculate & Show Steps</button>
         
         <div class="result" id="result"></div>
+        <div class="step-details" id="step-details"></div>
+        
+        <div class="arrows-container">
+            <span class="arrow" onclick="showStep(-1)">⬅ Previous</span>
+            <span class="arrow" onclick="showStep(1)">Next ➡</span>
+        </div>
     </div>
 
     <script>
+        let currentStep = 0;
+        let steps = [];
+
         function calculateStringLength() {
             const diameter = parseFloat(document.getElementById("diameter").value);
             const positions = document.getElementById("positions").value.split(",").map(Number);
@@ -71,8 +87,9 @@
                 coordinates.push({ x, y });
             }
 
-            // Calculate total string length
+            // Calculate total string length and steps
             let totalLength = 0;
+            steps = [];
             for (let i = 0; i < positions.length - 1; i++) {
                 const p1 = coordinates[positions[i] % numNails];
                 const p2 = coordinates[positions[i + 1] % numNails];
@@ -80,9 +97,32 @@
                     Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
                 );
                 totalLength += distance;
+                steps.push({
+                    from: positions[i],
+                    to: positions[i + 1],
+                    distance: distance
+                });
             }
 
             document.getElementById("result").textContent = `Total String Length: ${totalLength.toFixed(2)} meters`;
+            currentStep = 0;
+            showCurrentStep();
+        }
+
+        function showStep(direction) {
+            currentStep += direction;
+            if (currentStep < 0) currentStep = 0;
+            if (currentStep >= steps.length) currentStep = steps.length - 1;
+            showCurrentStep();
+        }
+
+        function showCurrentStep() {
+            if (steps.length === 0) {
+                document.getElementById("step-details").textContent = "No steps to display.";
+                return;
+            }
+            const step = steps[currentStep];
+            document.getElementById("step-details").textContent = `Step ${currentStep + 1}: From Nail ${step.from} to Nail ${step.to}, Distance: ${step.distance.toFixed(2)} meters`;
         }
     </script>
 </body>
